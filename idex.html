@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Vendas - Móveis</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .date-display {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            width: 100%;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-danger {
+            background-color: #e74c3c;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        .btn-success {
+            background-color: #2ecc71;
+        }
+        
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .delete-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .summary-item {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .summary-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        
+        .profit {
+            color: #2ecc71;
+        }
+        
+        .loss {
+            color: #e74c3c;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #7f8c8d;
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            
+            .summary {
+                grid-template-columns: 1fr;
+            }
+            
+            th, td {
+                padding: 8px 10px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Controle de Vendas - Móveis</h1>
+        <div class="date-display" id="currentDate">Carregando data...</div>
+    </header>
+    
+    <div class="container">
+        <section class="card">
+            <h2>Adicionar Venda</h2>
+            <form id="saleForm">
+                <div class="form-group">
+                    <label for="itemName">Nome do Móvel</label>
+                    <input type="text" id="itemName" placeholder="Ex: Sofá 3 lugares" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="costPrice">Preço de Custo (R$)</label>
+                    <input type="number" id="costPrice" step="0.01" min="0" placeholder="0,00" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="salePrice">Preço de Venda (R$)</label>
+                    <input type="number" id="salePrice" step="0.01" min="0" placeholder="0,00" required>
+                </div>
+                
+                <button type="submit">Adicionar Venda</button>
+            </form>
+        </section>
+        
+        <section class="card">
+            <h2>Vendas de Hoje</h2>
+            <div id="salesList">
+                <div class="empty-state" id="emptyState">
+                    Nenhuma venda registrada hoje.
+                </div>
+                <table id="salesTable" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Móvel</th>
+                            <th>Custo (R$)</th>
+                            <th>Venda (R$)</th>
+                            <th>Lucro (R$)</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salesTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+        <section class="card">
+            <h2>Resumo do Dia</h2>
+            <div class="summary">
+                <div class="summary-item">
+                    <div>Total de Vendas</div>
+                    <div class="summary-value" id="totalSales">R$ 0,00</div>
+                </div>
+                <div class="summary-item">
+                    <div>Total de Custos</div>
+                    <div class="summary-value" id="totalCosts">R$ 0,00</div>
+                </div>
+                <div class="summary-item">
+                    <div>Lucro Total</div>
+                    <div class="summary-value" id="totalProfit">R$ 0,00</div>
+                </div>
+                <div class="summary-item">
+                    <div>Itens Vendidos</div>
+                    <div class="summary-value" id="itemsCount">0</div>
+                </div>
+            </div>
+            
+            <button class="btn-danger" id="clearDay" style="margin-top: 20px;">Finalizar Dia (Limpar Tudo)</button>
+        </section>
+    </div>
+
+    <script>
+        // Atualizar data atual
+        function updateCurrentDate() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('pt-BR', options);
+        }
+        
+        // Formatar valor em Real brasileiro
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(value);
+        }
+        
+        // Carregar vendas do localStorage
+        function loadSales() {
+            const today = new Date().toDateString();
+            const storedSales = localStorage.getItem('sales_' + today);
+            return storedSales ? JSON.parse(storedSales) : [];
+        }
+        
+        // Salvar vendas no localStorage
+        function saveSales(sales) {
+            const today = new Date().toDateString();
+            localStorage.setItem('sales_' + today, JSON.stringify(sales));
+        }
+        
+        // Atualizar a tabela de vendas
+        function updateSalesTable() {
+            const sales = loadSales();
+            const tableBody = document.getElementById('salesTableBody');
+            const table = document.getElementById('salesTable');
+            const emptyState = document.getElementById('emptyState');
+            
+            // Limpar tabela
+            tableBody.innerHTML = '';
+            
+            if (sales.length === 0) {
+                table.style.display = 'none';
+                emptyState.style.display = 'block';
+            } else {
+                table.style.display = 'table';
+                emptyState.style.display = 'none';
+                
+                // Adicionar cada venda à tabela
+                sales.forEach((sale, index) => {
+                    const profit = sale.salePrice - sale.costPrice;
+                    const row = document.createElement('tr');
+                    
+                    row.innerHTML = `
+                        <td>${sale.itemName}</td>
+                        <td>${formatCurrency(sale.costPrice)}</td>
+                        <td>${formatCurrency(sale.salePrice)}</td>
+                        <td class="${profit >= 0 ? 'profit' : 'loss'}">${formatCurrency(profit)}</td>
+                        <td>
+                            <button class="delete-btn" data-index="${index}">Excluir</button>
+                        </td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+                
+                // Adicionar event listeners aos botões de exclusão
+                document.querySelectorAll('.delete-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const index = parseInt(this.getAttribute('data-index'));
+                        deleteSale(index);
+                    });
+                });
+            }
+            
+            updateSummary();
+        }
+        
+        // Atualizar o resumo
+        function updateSummary() {
+            const sales = loadSales();
+            
+            const totalSales = sales.reduce((sum, sale) => sum + sale.salePrice, 0);
+            const totalCosts = sales.reduce((sum, sale) => sum + sale.costPrice, 0);
+            const totalProfit = totalSales - totalCosts;
+            const itemsCount = sales.length;
+            
+            document.getElementById('totalSales').textContent = formatCurrency(totalSales);
+            document.getElementById('totalCosts').textContent = formatCurrency(totalCosts);
+            document.getElementById('totalProfit').textContent = formatCurrency(totalProfit);
+            document.getElementById('totalProfit').className = totalProfit >= 0 ? 'summary-value profit' : 'summary-value loss';
+            document.getElementById('itemsCount').textContent = itemsCount;
+        }
+        
+        // Adicionar uma nova venda
+        function addSale(itemName, costPrice, salePrice) {
+            const sales = loadSales();
+            sales.push({
+                itemName,
+                costPrice: parseFloat(costPrice),
+                salePrice: parseFloat(salePrice),
+                date: new Date().toISOString()
+            });
+            
+            saveSales(sales);
+            updateSalesTable();
+        }
+        
+        // Excluir uma venda
+        function deleteSale(index) {
+            const sales = loadSales();
+            sales.splice(index, 1);
+            saveSales(sales);
+            updateSalesTable();
+        }
+        
+        // Limpar todas as vendas do dia
+        function clearDay() {
+            if (confirm('Tem certeza que deseja finalizar o dia e limpar todas as vendas?')) {
+                const today = new Date().toDateString();
+                localStorage.removeItem('sales_' + today);
+                updateSalesTable();
+            }
+        }
+        
+        // Inicializar a aplicação
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCurrentDate();
+            updateSalesTable();
+            
+            // Event listener para o formulário
+            document.getElementById('saleForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const itemName = document.getElementById('itemName').value;
+                const costPrice = document.getElementById('costPrice').value;
+                const salePrice = document.getElementById('salePrice').value;
+                
+                addSale(itemName, costPrice, salePrice);
+                
+                // Limpar o formulário
+                this.reset();
+                document.getElementById('itemName').focus();
+            });
+            
+            // Event listener para o botão de limpar dia
+            document.getElementById('clearDay').addEventListener('click', clearDay);
+        });
+    </script>
+</body>
+</html>
